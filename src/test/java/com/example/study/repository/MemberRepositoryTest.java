@@ -1,7 +1,9 @@
 package com.example.study.repository;
 
 import com.example.study.entity.Member;
+import com.example.study.entity.QMember;
 import com.querydsl.core.Tuple;
+import com.querydsl.jpa.JPAExpressions;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -326,6 +328,59 @@ class MemberRepositoryTest {
       .fetch();
     //then
     result.forEach(tuple -> System.out.println("tuple = " + tuple));
+  }
+
+  @Test
+  @DisplayName("sub query 사용하기(나이가 가장 많은 회원을 조회)")
+  void subQueryTest() {
+    //given
+    //같은 테이블에서 서브쿼리를 적용하려면 별도로 QClass의 객체를 생성해야 합니다.
+    QMember memberSub = new QMember("memberSub");
+    //when
+    List<Member> result = factory.selectFrom(member)
+      .where(member.age.eq(
+        JPAExpressions //서브쿼리를 사용할 수 있게 해 주는 클래스
+          .select(memberSub.age.max())
+          .from(memberSub)
+      )).fetch();
+    //then
+    System.out.println("\n\n\n");
+    result.forEach(System.out::println);
+    System.out.println("\n\n\n");
+  }
+
+  @Test
+  @DisplayName("나이가 평균 나이 이상인 회원을 조회")
+  void subQueryGoe() {
+    //given
+    QMember m2 = new QMember("m2");
+    //when
+    //JPAExpressions는 from 절을 제외하고, select와 where절에서 사용 가능하다.
+    List<Member> result = factory.selectFrom(member)
+      .where(member.age.goe(
+        JPAExpressions
+          .select(m2.age.avg())
+          .from(m2)
+      ))
+      .fetch();
+    //then
+    assertEquals(result.size(), 4);
+  }
+
+  @Test
+  @DisplayName("동적 sql 테스트")
+  void dynamicQueryTest() {
+    //given
+    String name = null;
+    int age = 60;
+    //when
+    List<Member> result = memberRepository.findUser(name, age);
+    //then
+    assertEquals(result.size(), 2);
+
+    System.out.println("\n\n\n");
+    result.forEach(System.out::println);
+    System.out.println("\n\n\n");
   }
 
 }

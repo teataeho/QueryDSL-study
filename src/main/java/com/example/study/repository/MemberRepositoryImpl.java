@@ -1,6 +1,7 @@
 package com.example.study.repository;
 
 import com.example.study.entity.Member;
+import com.querydsl.core.types.dsl.BooleanExpression;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import lombok.RequiredArgsConstructor;
 
@@ -22,4 +23,25 @@ public class MemberRepositoryImpl implements MemberRepositoryCustom{
       .where(member.userName.eq(name))
       .fetch();
   }
+
+  //////////////////////////////////////////////////////////////////////////
+
+  //Where절에 BooleanExpression을 리턴하는 메서드를 사용합니다.
+  //nameEq, ageEq에서는 값이 없다면 null을 리턴하고, 그렇지 않을 경우에는 값을 반환합니다.
+  //Where절에서는 null값인 경우에는 조건을 건너 뜁니다.
+  public List<Member> findUser(String nameParam, Integer ageParam) {
+    return queryFactory
+      .selectFrom(member)
+      .where(nameEq(nameParam), ageEq(ageParam))
+      .fetch();
+  }
+
+  private BooleanExpression ageEq(Integer ageParam) {
+    return ageParam != null ? member.age.eq(ageParam) : null;
+  }
+
+  private BooleanExpression nameEq(String nameParam) {
+    return nameParam != null ? member.userName.eq(nameParam) : null;
+  }
+
 }
